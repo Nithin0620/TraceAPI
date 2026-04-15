@@ -44,7 +44,7 @@ function loadInitialTheme(): ThemeName {
   } catch {
     // ignore
   }
-  return "light";
+  return "dark";
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
