@@ -43,20 +43,53 @@ export async function sendRequest(draft: RequestDraft): Promise<ResponseData> {
   }
 
   try {
-    const res = await fetch(draft.url, {
-      method: draft.method,
-      headers,
-      body,
-    });
+    const isAbsoluteHttp = draft.url.startsWith("http://") || draft.url.startsWith("https://");
+
+    // Use server proxy for absolute URLs to avoid browser CORS failures
+    // (e.g. localhost -> 127.0.0.1 is cross-origin).
+    const res = isAbsoluteHttp
+      ? await fetch("/api/proxy", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            url: draft.url,
+            method: draft.method,
+            headers,
+            body,
+          }),
+        })
+      : await fetch(draft.url, { method: draft.method, headers, body });
 
     const timeMs = Math.round(performance.now() - start);
-    const resText = await res.text();
-    const resHeaders: Record<string, string> = {};
-    res.headers.forEach((v, k) => (resHeaders[k] = v));
+
+    // Proxy returns JSON with response details; direct fetch returns the upstream body.
+    let resText = "";
+    let resHeaders: Record<string, string> = {};
+    let status: number | null = null;
+    let statusText: string | undefined = undefined;
+
+    if (isAbsoluteHttp) {
+      const payload = (await res.json()) as {
+        status: number;
+        statusText?: string;
+        timeMs?: number;
+        headers: Record<string, string>;
+        bodyText: string;
+      };
+      status = payload.status;
+      statusText = payload.statusText;
+      resHeaders = payload.headers ?? {};
+      resText = payload.bodyText ?? "";
+    } else {
+      status = res.status;
+      statusText = res.statusText;
+      resText = await res.text();
+      res.headers.forEach((v, k) => (resHeaders[k] = v));
+    }
 
     const out: ResponseData = {
-      status: res.status,
-      statusText: res.statusText,
+      status,
+      statusText,
       timeMs,
       headers: resHeaders,
       bodyText: resText,
