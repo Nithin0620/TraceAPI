@@ -128,14 +128,34 @@ export async function sendRequest(draft: RequestDraft): Promise<ResponseData> {
 }
 
 export async function groqChat(messages: Array<{ role: "system" | "user" | "assistant"; content: string }>) {
-  const res = await fetch("/api/groq", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ messages }),
-  });
-  const json = (await res.json()) as { content?: string; error?: string; detail?: string };
-  if (!res.ok) throw new Error(json.error ?? "AI request failed");
-  return json.content ?? "";
+  try {
+    const res = await fetch("/api/groq", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messages }),
+    });
+    
+    let json: any;
+    try {
+      json = await res.json();
+    } catch (e) {
+      throw new Error("Invalid response from AI service");
+    }
+    
+    if (!res.ok) {
+      const errorMsg = json?.error || json?.detail || "AI request failed";
+      throw new Error(errorMsg);
+    }
+    
+    if (!json?.content) {
+      throw new Error("No response content from AI service");
+    }
+    
+    return json.content;
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "AI request failed";
+    throw new Error(message);
+  }
 }
 
 export function headersToObject(headers: HeaderKV[]) {

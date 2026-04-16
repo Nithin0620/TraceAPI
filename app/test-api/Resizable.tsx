@@ -73,7 +73,10 @@ export function ResizableSidebar({
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           title={collapsed ? "Expand" : "Collapse"}
         >
-          {collapsed ? "»" : "«"}
+          {side === "left"
+            ? collapsed ? "»" : "«"
+            : collapsed ? "«" : "»"
+          }
         </button>
       </div>
 

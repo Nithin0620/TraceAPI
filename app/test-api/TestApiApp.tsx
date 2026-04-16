@@ -56,13 +56,20 @@ function prettyJson(value: unknown) {
   }
 }
 
+function getResponseBorderColor(response?: Tab["response"]) {
+  if (!response) return "border-base-300";
+  if (response.error) return "border-error";
+  if (response.status && response.status >= 200 && response.status < 300) return "border-success";
+  return "border-warning";
+}
+
 function useToasts() {
   const [toasts, setToasts] = useState<Array<{ id: string; kind: "info" | "error"; text: string }>>(
     [],
   );
   const push = (kind: "info" | "error", text: string) => {
     const id = uid("toast");
-    setToasts((t) => [...t, { id, kind, text }]);
+    setToasts((t) => [...t, { id, kind, text }]); 
     window.setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 3500);
   };
   return { toasts, push };
@@ -73,7 +80,8 @@ export function TestApiApp() {
 
   const [leftCollapsed, setLeftCollapsed] = useState(false);
   const [rightCollapsed, setRightCollapsed] = useState(false);
-  const [rightTab, setRightTab] = useState<"saved" | "history" | "chat">("saved");
+  const [rightTab, setRightTab] = useState<"saved" | "history" | "chat">("chat");
+  const [isLoadingRequest, setIsLoadingRequest] = useState(false);
 
   const [saved, setSaved] = useState<SavedRequest[]>([]);
   useEffect(() => setSaved(loadSavedRequests()), []);
@@ -122,10 +130,10 @@ export function TestApiApp() {
 
   async function runActiveRequest() {
     if (!active) return;
-    if (!active.draft.url.trim()) {
-      push("error", "Enter an API URL first.");
-      return;
-    }
+    // if (!active.draft.url.trim()) {
+    //   push("error", "Enter an API URL first.");
+    //   return;
+    // }
 
     if (active.draft.method === "POST" || active.draft.method === "PUT") {
       const check = tryFormatJson(active.draft.body);
@@ -135,54 +143,59 @@ export function TestApiApp() {
       }
     }
 
-    const res = await sendRequest(active.draft);
-    setTabs((prev) =>
-      prev.map((t) =>
-        t.id === activeId ? { ...t, response: res, aiExplain: undefined, lastRunAt: Date.now() } : t,
-      ),
-    );
-
-    // History (auto-record)
-    setHistory((prev) => {
-      const item = tabToHistory({ ...active, response: res });
-      const next = [item, ...prev.filter((x) => !(x.draft.method === item.draft.method && x.draft.url === item.draft.url))].slice(
-        0,
-        HISTORY_LIMIT,
-      );
-      try {
-        saveHistory(next);
-      } catch {
-        // ignore
-      }
-      return next;
-    });
-
-    // AI recommendation panel
+    setIsLoadingRequest(true);
     try {
-      const explain = await groqChat([
-        {
-          role: "system",
-          content:
-            "You are an API testing assistant. Explain responses for beginners. Be concise, actionable, and point out likely mistakes (auth headers, JSON formatting, URL, method, CORS, etc.).",
-        },
-        {
-          role: "user",
-          content: [
-            `Request: ${active.draft.method} ${active.draft.url}`,
-            `Response status: ${res.status ?? "NETWORK_ERROR"}`,
-            `Response time: ${res.timeMs ?? "?"}ms`,
-            res.error ? `Error: ${res.error}` : "",
-            `Body (truncated to 2000 chars):\n${(res.bodyText ?? "").slice(0, 2000)}`,
-            "",
-            "Explain what this likely means and what to try next.",
-          ]
-            .filter(Boolean)
-            .join("\n"),
-        },
-      ]);
-      setTabs((prev) => prev.map((t) => (t.id === activeId ? { ...t, aiExplain: explain } : t)));
-    } catch (e) {
-      push("error", e instanceof Error ? e.message : "AI request failed");
+      const res = await sendRequest(active.draft);
+      setTabs((prev) =>
+        prev.map((t) =>
+          t.id === activeId ? { ...t, response: res, aiExplain: undefined, lastRunAt: Date.now() } : t,
+        ),
+      );
+
+      // History (auto-record)
+      setHistory((prev) => {
+        const item = tabToHistory({ ...active, response: res });
+        const next = [item, ...prev.filter((x) => !(x.draft.method === item.draft.method && x.draft.url === item.draft.url))].slice(
+          0,
+          HISTORY_LIMIT,
+        );
+        try {
+          saveHistory(next);
+        } catch {
+          // ignore
+        }
+        return next;
+      });
+
+      // AI recommendation panel
+      try {
+        const explain = await groqChat([
+          {
+            role: "system",
+            content:
+              "You are an API testing assistant. Explain responses for beginners. Be concise, actionable, and point out likely mistakes (auth headers, JSON formatting, URL, method, CORS, etc.).",
+          },
+          {
+            role: "user",
+            content: [
+              `Request: ${active.draft.method} ${active.draft.url}`,
+              `Response status: ${res.status ?? "NETWORK_ERROR"}`,
+              `Response time: ${res.timeMs ?? "?"}ms`,
+              res.error ? `Error: ${res.error}` : "",
+              `Body (truncated to 2000 chars):\n${(res.bodyText ?? "").slice(0, 2000)}`,
+              "",
+              "Explain what this likely means and what to try next.",
+            ]
+              .filter(Boolean)
+              .join("\n"),
+          },
+        ]);
+        setTabs((prev) => prev.map((t) => (t.id === activeId ? { ...t, aiExplain: explain } : t)));
+      } catch (e) {
+        push("error", e instanceof Error ? e.message : "AI request failed");
+      }
+    } finally {
+      setIsLoadingRequest(false);
     }
   }
 
@@ -312,38 +325,50 @@ export function TestApiApp() {
   }
 
   return (
-    <div className="flex-1 min-h-0">
-      <div className="mx-auto max-w-[1400px] px-4 py-4">
+    <div className="flex-1 min-h-0 flex flex-col">
+      <div className="mx-auto w-full max-w-[1600px] px-3 sm:px-6 py-4 flex flex-col flex-1 min-h-0">
         {/* Tabs */}
-        <div className="flex items-center gap-2">
-          <div className="tabs tabs-boxed bg-base-200/40 border msp-border">
-            {tabs.map((t) => (
-              <div key={t.id} className="tab gap-2">
-                <button
-                  className={[
-                    "btn btn-ghost btn-xs",
-                    activeId === t.id ? "text-primary font-semibold" : "text-base-content/70",
-                  ].join(" ")}
-                  onClick={() => setActiveId(t.id)}
-                >
-                  <span className={["badge badge-sm", methodColor(t.draft.method)].join(" ")}>
-                    {t.draft.method}
-                  </span>
-                  <span className="truncate max-w-[200px]">{t.title}</span>
-                </button>
-                <button className="btn btn-ghost btn-xs" onClick={() => closeTab(t.id)} aria-label="Close tab">
-                  ✕
-                </button>
-              </div>
-            ))}
+        <div className="flex items-center gap-2 pb-4 border-b border-base-300">
+          <div className="flex-1 overflow-x-auto scrollbar-hide">
+            <div className="tabs tabs-bordered gap-0 inline-flex">
+              {tabs.map((t) => (
+                <div key={t.id} className="group relative">
+                  <button
+                    className={[
+                      "tab px-4 py-2 text-sm font-medium transition-all",
+                      activeId === t.id 
+                        ? "tab-active text-primary border-b-2 border-primary" 
+                        : "text-base-content/70 hover:text-base-content",
+                    ].join(" ")}
+                    onClick={() => setActiveId(t.id)}
+                  >
+                    <span className={["badge badge-sm", methodColor(t.draft.method)].join(" ")}>
+                      {t.draft.method}
+                    </span>
+                    <span className="truncate max-w-[150px]">{t.title}</span>
+                  </button>
+                  <button 
+                    className="absolute -right-2 -top-2 opacity-0 group-hover:opacity-100 btn btn-ghost btn-xs btn-circle transition-opacity" 
+                    onClick={() => closeTab(t.id)} 
+                    aria-label="Close tab"
+                    title="Close"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
-          <button className="btn btn-sm btn-primary rounded-full" onClick={addTab}>
-            + New tab
+          <button className="btn btn-sm btn-primary rounded-full gap-1 flex-shrink-0" onClick={addTab}>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            New
           </button>
         </div>
 
         {/* Workspace */}
-        <div className="mt-4 h-[calc(100vh-150px)] min-h-[560px] flex overflow-hidden rounded-2xl border msp-border bg-base-200/30">
+        <div className="mt-4 flex-1 min-h-0 flex overflow-hidden border-4 border-base-300 rounded-lg bg-base-100">
           <ResizableSidebar
             side="left"
             title="Request"
@@ -352,7 +377,7 @@ export function TestApiApp() {
             onCollapsedChange={setLeftCollapsed}
           >
             {!active ? null : (
-              <div className="p-4 space-y-4">
+              <div className="p-4 space-y-4 border-r border-base-300 h-lvh overflow-auto">
                 <div className="flex gap-2">
                   <select
                     className="select select-bordered w-32"
@@ -374,8 +399,13 @@ export function TestApiApp() {
                 </div>
 
                 <div className="flex gap-2">
-                  <button className="btn btn-primary flex-1" onClick={runActiveRequest}>
-                    Send
+                  <button 
+                    className="btn btn-primary flex-1 gap-2" 
+                    onClick={runActiveRequest}
+                    disabled={isLoadingRequest}
+                  >
+                    {isLoadingRequest && <span className="loading loading-spinner loading-sm"></span>}
+                    {isLoadingRequest ? "Sending..." : "Send"}
                   </button>
                   <button className="btn btn-ghost border msp-border" onClick={() => active && saveTab(active)}>
                     Save
@@ -485,12 +515,12 @@ export function TestApiApp() {
                   </div>
                 </div>
 
-                <div className="mt-4 grid gap-4 lg:grid-cols-2 items-start">
-                  <div className="rounded-2xl border msp-border bg-base-100 p-4">
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="text-sm font-semibold">Response</div>
+                <div className={`grid gap-2 m-5 lg:grid-cols-2 items-stretch border-4 ${getResponseBorderColor(active.response)} rounded-xl h-full`}>
+                  <div className={`flex flex-col bg-base-100 p-6 sm:p-8 transition-colors duration-200`}>
+                    <div className="flex items-center justify-between gap-2 mb-4">
+                      <h3 className="text-base font-semibold">Response</h3>
                       <button
-                        className="btn btn-ghost btn-xs"
+                        className="btn btn-ghost btn-sm"
                         onClick={() => {
                           const text =
                             active.response?.json != null
@@ -505,28 +535,80 @@ export function TestApiApp() {
                         Copy
                       </button>
                     </div>
-                    <div className="mt-2 text-xs text-base-content/60">
-                      {active.response?.error ? active.response.error : " "}
-                    </div>
-                    <pre className="mt-3 rounded-xl bg-base-200/40 p-3 text-xs overflow-auto">
-                      {active.response
-                        ? active.response.json
-                          ? prettyJson(active.response.json)
-                          : active.response.bodyText || ""
-                        : "Send a request to see results."}
-                    </pre>
+                    {isLoadingRequest ? (
+                      <div className="space-y-3">
+                        <div className="skeleton h-8 w-full"></div>
+                        <div className="skeleton h-32 w-full"></div>
+                      </div>
+                    ) : (
+                      <>
+                        {active.response && (
+                          <div className="mb-4 p-4 rounded-lg border border-base-300 bg-base-200/30">
+                            <div className="grid grid-cols-3 gap-4 text-sm">
+                              <div>
+                                <div className="text-xs text-base-content/60">Status</div>
+                                <div className={`font-bold text-lg ${
+                                  active.response.status 
+                                    ? active.response.status >= 200 && active.response.status < 300
+                                      ? "text-success"
+                                      : active.response.status >= 400
+                                      ? "text-error"
+                                      : "text-warning"
+                                    : "text-base-content"
+                                }`}>
+                                  {active.response.status || "—"}
+                                </div>
+                              </div>
+                              <div>
+                                <div className="text-xs text-base-content/60">Message</div>
+                                <div className="text-sm font-medium truncate">{active.response.statusText || "—"}</div>
+                              </div>
+                              <div>
+                                <div className="text-xs text-base-content/60">Time</div>
+                                <div className="text-sm font-medium">{active.response.timeMs ?? "—"}ms</div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        {active.response?.error && (
+                          <div className="alert alert-error mb-4">
+                            <svg className="h-6 w-6 flex-shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span>{active.response.error}</span>
+                          </div>
+                        )}
+                        <pre className="flex-1 rounded-lg bg-base-200/50 p-4 text-xs overflow-auto border border-base-300">
+                          {active.response
+                            ? active.response.json
+                              ? prettyJson(active.response.json)
+                              : active.response.bodyText || "(Empty response)"
+                            : "Send a request to see results."}
+                        </pre>
+                      </>
+                    )}
                   </div>
 
-                  <div className="rounded-2xl border msp-border bg-base-100 p-4">
-                    <div className="text-sm font-semibold">AI recommendation</div>
-                    <div className="mt-3 whitespace-pre-wrap text-sm leading-6 text-base-content/80">
-                      {active.aiExplain
-                        ? active.aiExplain
-                        : "After you send a request, AI will explain the response and suggest fixes (headers, auth, JSON, URL, etc.)."}
-                    </div>
-                    <div className="mt-4 text-xs text-base-content/60">
-                      Requires <code>GROQ_API_KEY</code> in your environment.
-                    </div>
+                  <div className={`flex flex-col bg-base-100 p-6 sm:p-8 transition-colors duration-200`}>
+                    <h3 className="text-base font-semibold mb-4">AI Explanation</h3>
+                    {isLoadingRequest ? (
+                      <div className="space-y-3">
+                        <div className="skeleton h-6 w-full"></div>
+                        <div className="skeleton h-6 w-5/6"></div>
+                        <div className="skeleton h-6 w-4/5"></div>
+                      </div>
+                    ) : (
+                      <div className="flex-1 text-sm leading-7 text-base-content/80 whitespace-pre-wrap overflow-auto">
+                        {active.aiExplain
+                          ? active.aiExplain
+                          : "Send a request to get AI-powered insights about the response, including potential issues and next steps."}
+                      </div>
+                    )}
+                    {/* {!isLoadingRequest && (
+                      <div className="mt-4 text-xs text-base-content/60 bg-base-200/30 rounded-lg p-3">
+                        💡 Powered by Groq. Requires <code>GROQ_API_KEY</code> in your environment.
+                      </div>
+                    )} */}
                   </div>
                 </div>
               </div>
@@ -540,7 +622,7 @@ export function TestApiApp() {
             collapsed={rightCollapsed}
             onCollapsedChange={setRightCollapsed}
           >
-            <div className="p-3">
+            <div className="p-3 space-y-4 border-r border-base-300 h-auto overflow-auto">
               <div className="tabs tabs-bordered">
                 <button
                   className={["tab", rightTab === "saved" ? "tab-active" : ""].join(" ")}
@@ -624,33 +706,50 @@ export function TestApiApp() {
                 </div>
               </div>
             ) : (
-              <div className="px-3 pb-4 h-[calc(100%-92px)] flex flex-col">
-                <div className="flex-1 overflow-auto space-y-2 pr-1">
-                  {chat.map((m, i) => (
-                    <div
-                      key={i}
-                      className={[
-                        "rounded-2xl px-3 py-2 text-sm leading-6",
-                        m.role === "user"
-                          ? "ml-auto bg-primary text-primary-content max-w-[85%]"
-                          : "mr-auto bg-base-200/60 text-base-content max-w-[85%]",
-                      ].join(" ")}
-                    >
-                      {m.content}
+              <div className="px-3 pb-4 h-[calc(100%-92px)] flex flex-col bg-gradient-to-b from-base-100/50 to-base-100">
+                <div className="flex-1 overflow-auto space-y-3 pr-1 py-4">
+                  {chat.length === 0 ? (
+                    <div className="h-full flex items-center justify-center">
+                      <div className="text-center text-base-content/60">
+                        <div className="text-4xl mb-2">💬</div>
+                        <p className="text-sm">Start a conversation</p>
+                      </div>
                     </div>
-                  ))}
+                  ) : (
+                    chat.map((m, i) => (
+                      <div
+                        key={i}
+                        className={[
+                          "rounded-2xl px-4 py-3 text-sm leading-6 break-words",
+                          m.role === "user"
+                            ? "ml-auto bg-primary text-primary-content max-w-[85%] shadow-sm"
+                            : "mr-auto bg-base-200/70 text-base-content max-w-[85%]",
+                        ].join(" ")}
+                      >
+                        {m.content}
+                      </div>
+                    ))
+                  )}
                 </div>
-                <div className="mt-3 flex gap-2">
+                <div className="mt-3 flex gap-2 pt-3 border-t border-base-300">
                   <input
-                    className="input input-bordered flex-1"
-                    placeholder='Send GET request to https://example.com'
+                    className="input input-bordered flex-1 input-sm"
+                    placeholder='Try: "Send GET request to https://api.github.com"'
                     value={chatInput}
                     onChange={(e) => setChatInput(e.target.value)}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter") handleChatSend();
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        handleChatSend();
+                      }
                     }}
+                    disabled={isLoadingRequest}
                   />
-                  <button className="btn btn-primary" onClick={handleChatSend}>
+                  <button 
+                    className="btn btn-primary btn-sm" 
+                    onClick={handleChatSend}
+                    disabled={isLoadingRequest || !chatInput.trim()}
+                  >
                     Send
                   </button>
                 </div>
@@ -661,9 +760,24 @@ export function TestApiApp() {
       </div>
 
       {/* Toasts */}
-      <div className="toast toast-end z-50">
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none">
         {toasts.map((t) => (
-          <div key={t.id} className={["alert", t.kind === "error" ? "alert-error" : "alert-info"].join(" ")}>
+          <div 
+            key={t.id} 
+            className={[
+              "alert rounded-xl shadow-lg pointer-events-auto max-w-sm gap-3",
+              t.kind === "error" ? "alert-error" : "alert-success"
+            ].join(" ")}
+          >
+            {t.kind === "error" ? (
+              <svg className="h-6 w-6 flex-shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            ) : (
+              <svg className="h-6 w-6 flex-shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            )}
             <span>{t.text}</span>
           </div>
         ))}

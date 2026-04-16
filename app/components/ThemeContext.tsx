@@ -35,24 +35,40 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 function applyTheme(theme: ThemeName) {
   document.documentElement.setAttribute("data-theme", theme);
+  const darkThemes = ["dark", "synthwave", "cyberpunk", "dracula", "forest", "black", "luxury"];
+  document.documentElement.style.colorScheme = darkThemes.includes(theme) ? "dark" : "light";
 }
 
 function loadInitialTheme(): ThemeName {
+  if (typeof window === "undefined") return "dark";
   try {
     const saved = localStorage.getItem(STORAGE_KEY) as ThemeName | null;
     if (saved && (THEMES as readonly string[]).includes(saved)) return saved;
   } catch {
     // ignore
   }
+  // Fallback to system preference if available
+  if (typeof window !== "undefined" && window.matchMedia) {
+    if (window.matchMedia("(prefers-color-scheme: dark)").matches) return "dark";
+    if (window.matchMedia("(prefers-color-scheme: light)").matches) return "light";
+  }
   return "dark";
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<ThemeName>(() => loadInitialTheme());
+  const [theme, setThemeState] = useState<ThemeName>("dark");
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    applyTheme(theme);
-  }, [theme]);
+    const initialTheme = loadInitialTheme();
+    setThemeState(initialTheme);
+    applyTheme(initialTheme);
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (mounted) applyTheme(theme);
+  }, [theme, mounted]);
 
   const value = useMemo<ThemeContextValue>(
     () => ({
