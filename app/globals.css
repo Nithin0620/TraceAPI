@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 @plugin "daisyui" {
@@ -23,19 +24,40 @@
   logs: false;
 }
 
+/* ── Base ── */
 html {
-  transition: background-color 200ms, color 200ms;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
 body {
-  transition: background-color 200ms, color 200ms;
+  overflow-x: hidden;
+  scroll-behavior: auto;
 }
 
-* {
-  transition: background-color 200ms, color 200ms, border-color 200ms;
+code,
+pre,
+.font-mono {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
 }
 
-/* Hide scrollbar for cleaner UI */
+/* ── Theme transitions ── */
+html,
+body {
+  transition: background-color 300ms ease, color 300ms ease;
+}
+
+/* Remove global transitions that cause scroll issues */
+.scroll-container * {
+  transition: none !important;
+}
+
+.scroll-container {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* ── Scrollbar ── */
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
@@ -45,11 +67,673 @@ body {
   display: none;
 }
 
-/* Minimal, fast “MSP-ish” polish without heavy effects */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: oklch(var(--bc) / 0.2);
+  border-radius: 999px;
+  transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: oklch(var(--bc) / 0.3);
+}
+
+/* ── Smooth Scroll for specific links only ── */
+.smooth-scroll {
+  scroll-behavior: smooth;
+}
+
+/* ── Optimize scrolling performance ── */
+.scroll-container {
+  scroll-behavior: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+  contain: layout style paint;
+}
+
+/* Force hardware acceleration */
+.gpu-accelerated {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* ── Glass Surface ── */
 .msp-surface {
-  @apply bg-base-100/70 border border-base-300/50;
+  @apply bg-base-100/60 border border-base-300/40;
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
 }
 
 .msp-border {
-  @apply border-base-300/70;
+  @apply border-base-300/50;
+}
+
+/* ── Glassmorphism Card (simplified) ── */
+.glass-card {
+  background: oklch(var(--b1) / 0.4);
+  backdrop-filter: blur(16px) saturate(1.5);
+  -webkit-backdrop-filter: blur(16px) saturate(1.5);
+  border: 1px solid oklch(var(--bc) / 0.06);
+  box-shadow: 0 4px 16px oklch(var(--bc) / 0.08);
+  position: relative;
+  overflow: hidden;
+}
+
+.glass-card:hover {
+  background: oklch(var(--b1) / 0.5);
+  border-color: oklch(var(--p) / 0.2);
+  /* transform removed for scroll performance */
+}
+
+/* ── Animated Gradient Text ── */
+.gradient-text {
+  background: linear-gradient(135deg,
+      oklch(var(--p)) 0%,
+      oklch(var(--s)) 50%,
+      oklch(var(--a)) 100%);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradient-shift 4s ease infinite;
+  filter: drop-shadow(0 0 10px oklch(var(--p) / 0.2));
+}
+
+@keyframes gradient-shift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* ── Glow Effects ── */
+.glow-primary {
+  box-shadow: 0 0 20px oklch(var(--p) / 0.3), 0 0 60px oklch(var(--p) / 0.1);
+}
+
+.glow-primary-sm {
+  box-shadow: 0 0 12px oklch(var(--p) / 0.2), 0 0 30px oklch(var(--p) / 0.06);
+}
+
+.glow-success {
+  box-shadow: 0 0 20px oklch(var(--su) / 0.3);
+}
+
+.glow-error {
+  box-shadow: 0 0 20px oklch(var(--er) / 0.3);
+}
+
+.glow-warning {
+  box-shadow: 0 0 20px oklch(var(--wa) / 0.3);
+}
+
+/* ── Animated Dot Grid Background ── */
+.dot-grid {
+  background-image: radial-gradient(oklch(var(--bc) / 0.06) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+/* ── Floating Orbs ── */
+.floating-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.3;
+  animation: float-drift 15s ease-in-out infinite;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+
+.floating-orb-1 {
+  width: 400px;
+  height: 400px;
+  background: oklch(var(--p) / 0.5);
+  top: -100px;
+  right: -100px;
+  animation-delay: 0s;
+}
+
+.floating-orb-2 {
+  width: 300px;
+  height: 300px;
+  background: oklch(var(--s) / 0.4);
+  bottom: -80px;
+  left: -80px;
+  animation-delay: -6s;
+}
+
+.floating-orb-3 {
+  width: 250px;
+  height: 250px;
+  background: oklch(var(--a) / 0.3);
+  top: 50%;
+  left: 50%;
+  animation-delay: -12s;
+}
+
+@keyframes float-drift {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(20px, -30px) scale(1.05);
+  }
+}
+
+/* ── Pulse Ring ── */
+.pulse-ring {
+  position: relative;
+}
+
+.pulse-ring::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, oklch(var(--p)), oklch(var(--s)));
+  opacity: 0;
+  z-index: -1;
+  animation: pulse-ring-animation 2s ease-in-out infinite;
+}
+
+@keyframes pulse-ring-animation {
+
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.3;
+    transform: scale(1.02);
+  }
+}
+
+/* ── Slide-in animations (disabled for scroll performance) ── */
+.animate-slide-up {
+  /* animation disabled for scroll performance */
+}
+
+.animate-slide-down {
+  /* animation disabled for scroll performance */
+}
+
+.animate-slide-left {
+  /* animation disabled for scroll performance */
+}
+
+.animate-slide-right {
+  /* animation disabled for scroll performance */
+}
+
+.animate-fade-in {
+  /* animation disabled for scroll performance */
+}
+
+.animate-scale-in {
+  /* animation disabled for scroll performance */
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-left {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-right {
+  from {
+    opacity: 0;
+    transform: translateX(-24px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Staggered children */
+.stagger-children>*:nth-child(1) {
+  animation-delay: 0.05s;
+}
+
+.stagger-children>*:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.stagger-children>*:nth-child(3) {
+  animation-delay: 0.15s;
+}
+
+.stagger-children>*:nth-child(4) {
+  animation-delay: 0.2s;
+}
+
+.stagger-children>*:nth-child(5) {
+  animation-delay: 0.25s;
+}
+
+.stagger-children>*:nth-child(6) {
+  animation-delay: 0.3s;
+}
+
+/* ── Status indicator pulse ── */
+.status-dot {
+  position: relative;
+}
+
+.status-dot::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  background: inherit;
+  opacity: 0.5;
+  animation: status-pulse 2s ease-in-out infinite;
+}
+
+@keyframes status-pulse {
+
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+
+  50% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}
+
+/* ── Shimmer loading ── */
+.shimmer {
+  background: linear-gradient(90deg,
+      oklch(var(--b2) / 0.5) 0%,
+      oklch(var(--b3) / 0.8) 50%,
+      oklch(var(--b2) / 0.5) 100%);
+  background-size: 200% 100%;
+  animation: shimmer-move 1.5s ease-in-out infinite;
+}
+
+@keyframes shimmer-move {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* ── Toast Slide In ── */
+.toast-enter {
+  animation: toast-slide-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes toast-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(100%) scale(0.8);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+/* ── Gradient Border ── */
+.gradient-border {
+  position: relative;
+  border: 0 !important;
+}
+
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, oklch(var(--p) / 0.4), oklch(var(--s) / 0.2), oklch(var(--a) / 0.3));
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+  pointer-events: none;
+}
+
+/* ── Workspace response border glow ── */
+.response-border-success {
+  border-color: oklch(var(--su) / 0.5);
+  box-shadow: 0 0 24px oklch(var(--su) / 0.08), inset 0 0 12px oklch(var(--su) / 0.03);
+}
+
+.response-border-error {
+  border-color: oklch(var(--er) / 0.5);
+  box-shadow: 0 0 24px oklch(var(--er) / 0.08), inset 0 0 12px oklch(var(--er) / 0.03);
+}
+
+.response-border-warning {
+  border-color: oklch(var(--wa) / 0.5);
+  box-shadow: 0 0 24px oklch(var(--wa) / 0.08), inset 0 0 12px oklch(var(--wa) / 0.03);
+}
+
+.response-border-idle {
+  border-color: oklch(var(--bc) / 0.08);
+}
+
+/* ── Code Block ── */
+.code-block {
+  @apply font-mono text-xs;
+  background: oklch(var(--b2) / 0.6);
+  border: 1px solid oklch(var(--bc) / 0.06);
+  border-radius: 12px;
+  padding: 1rem;
+  line-height: 1.6;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ── Navbar Glass ── */
+.navbar-glass {
+  background: oklch(var(--b1) / 0.65);
+  backdrop-filter: blur(20px) saturate(1.5);
+  -webkit-backdrop-filter: blur(20px) saturate(1.5);
+  border-bottom: 1px solid oklch(var(--bc) / 0.06);
+  box-shadow: 0 2px 20px oklch(var(--bc) / 0.04);
+}
+
+/* ── Feature Card Hover (simplified for performance) ── */
+.feature-card {
+  @apply rounded-2xl border border-base-300/40 p-6;
+  background: oklch(var(--b1) / 0.4);
+  backdrop-filter: blur(12px);
+  transition: background 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.feature-card:hover {
+  background: oklch(var(--b1) / 0.6);
+  border-color: oklch(var(--p) / 0.3);
+}
+
+/* ── Tab Indicator ── */
+.tab-indicator {
+  position: relative;
+}
+
+.tab-indicator.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 8px;
+  right: 8px;
+  height: 2px;
+  background: linear-gradient(90deg, oklch(var(--p)), oklch(var(--s)));
+  border-radius: 999px;
+}
+
+/* ── Workspace Panel ── */
+.workspace-panel {
+  background: oklch(var(--b1) / 0.5);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* ── Resize Handle ── */
+.resize-handle {
+  transition: background-color 0.2s ease;
+}
+
+.resize-handle:hover,
+.resize-handle:active {
+  background: oklch(var(--p) / 0.3);
+}
+
+/* ── Typing blink cursor ── */
+.blink-cursor::after {
+  content: '▊';
+  animation: blink 1s step-end infinite;
+  color: oklch(var(--p));
+}
+
+@keyframes blink {
+
+  0%,
+  50% {
+    opacity: 1;
+  }
+
+  51%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* ── Badge Glow Variants ── */
+.badge-glow-info {
+  box-shadow: 0 0 8px oklch(var(--in) / 0.4);
+}
+
+.badge-glow-success {
+  box-shadow: 0 0 8px oklch(var(--su) / 0.4);
+}
+
+.badge-glow-warning {
+  box-shadow: 0 0 8px oklch(var(--wa) / 0.4);
+}
+
+.badge-glow-error {
+  box-shadow: 0 0 8px oklch(var(--er) / 0.4);
+}
+
+/* ── Premium Loading Animations ── */
+.loading-dots::after {
+  animation-duration: 0.8s;
+}
+
+/* ── Magnetic Button Effect (simplified) ── */
+.magnetic-btn {
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.magnetic-btn:hover {
+  /* transform removed for scroll performance */
+}
+
+/* ── Particle Background ── */
+.particle-bg {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.particle {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: oklch(var(--p) / 0.4);
+  border-radius: 50%;
+  animation: particle-float 8s linear infinite;
+}
+
+@keyframes particle-float {
+  0% {
+    transform: translateY(100vh);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.5;
+  }
+  90% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateY(-100vh);
+    opacity: 0;
+  }
+}
+
+/* ── Aurora Background Effect ── */
+.aurora-bg {
+  position: absolute;
+  inset: 0;
+  background: 
+    radial-gradient(ellipse at top left, oklch(var(--p) / 0.1) 0%, transparent 50%),
+    radial-gradient(ellipse at top right, oklch(var(--s) / 0.1) 0%, transparent 50%),
+    radial-gradient(ellipse at bottom left, oklch(var(--a) / 0.1) 0%, transparent 50%);
+  animation: aurora-shift 15s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes aurora-shift {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(20px, -30px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 30px) scale(0.9);
+  }
+}
+
+/* ── Enhanced Status Dot ── */
+.enhanced-status-dot {
+  position: relative;
+  animation: status-glow 2s ease-in-out infinite;
+}
+
+.enhanced-status-dot::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: inherit;
+  opacity: 0.3;
+  animation: status-pulse-ring 2s ease-in-out infinite;
+}
+
+@keyframes status-glow {
+  0%, 100% {
+    filter: brightness(1) drop-shadow(0 0 4px currentColor);
+  }
+  50% {
+    filter: brightness(1.2) drop-shadow(0 0 8px currentColor);
+  }
+}
+
+@keyframes status-pulse-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: scale(2);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.3;
+  }
+}
+
+/* ── Text Reveal Animation ── */
+.text-reveal {
+  animation: text-reveal 1s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes text-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(20px) skewY(-2deg);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) skewY(0);
+  }
+}
+
+/* ── Parallax Scroll Effect ── */
+.parallax-slow {
+  transition: transform 0.6s ease-out;
+}
+
+.parallax-medium {
+  transition: transform 0.4s ease-out;
+}
+
+.parallax-fast {
+  transition: transform 0.2s ease-out;
 }

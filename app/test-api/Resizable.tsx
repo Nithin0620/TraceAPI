@@ -80,7 +80,7 @@ export function ResizableSidebar({
         </button>
       </div>
 
-      <div className={collapsed ? "hidden" : "h-[calc(100%-41px)] overflow-auto"}>{children}</div>
+      <div className={collapsed ? "hidden" : "h-full overflow-auto flex flex-col scroll-container"}>{children}</div>
 
       <div
         onMouseDown={onMouseDown}

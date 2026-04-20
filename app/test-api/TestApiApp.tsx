@@ -56,6 +56,20 @@ function prettyJson(value: unknown) {
   }
 }
 
+function formatAIExplanation(text: string) {
+  // Format markdown-like text with proper styling
+  return text
+    // Bold text **text** -> <strong>text</strong>
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    // Italic text *text* -> <em>text</em>
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    // Code blocks `code` -> <code>code</code>
+    .replace(/`(.*?)`/g, '<code class="bg-base-300 px-1 py-0.5 rounded text-xs">$1</code>')
+    // Line breaks
+    .replace(/\n\n/g, '<br /><br />')
+    .replace(/\n/g, '<br />');
+}
+
 function getResponseBorderColor(response?: Tab["response"]) {
   if (!response) return "border-base-300";
   if (response.error) return "border-error";
@@ -281,8 +295,9 @@ export function TestApiApp() {
     setChat((c) => [...c, { role: "user", content: text }]);
 
     const m =
-      text.match(/send\s+(get|post|put|delete)\s+request\s+to\s+(https?:\/\/\S+)/i) ??
-      text.match(/^(get|post|put|delete)\s+(https?:\/\/\S+)/i);
+      text.match(/send\s+(get|post|put|delete)\s+(?:request|req)\s+to\s+(https?:\/\/\S+)/i) ??
+      text.match(/^(get|post|put|delete)\s+(https?:\/\/\S+)/i) ??
+      text.match(/send\s+(get|post|put|delete)\s+to\s+(https?:\/\/\S+)/i);
     if (m && active) {
       const method = m[1].toUpperCase();
       const url = m[2];
@@ -327,18 +342,18 @@ export function TestApiApp() {
   return (
     <div className="flex-1 min-h-0 flex flex-col">
       <div className="mx-auto w-full max-w-[1600px] px-3 sm:px-6 py-4 flex flex-col flex-1 min-h-0">
-        {/* Tabs */}
-        <div className="flex items-center gap-2 pb-4 border-b border-base-300">
+        {/* Enhanced Tabs */}
+        <div className="flex items-center gap-2 pb-4 border-b border-base-300/50 backdrop-blur-sm">
           <div className="flex-1 overflow-x-auto scrollbar-hide">
             <div className="tabs tabs-bordered gap-0 inline-flex">
-              {tabs.map((t) => (
+              {tabs.map((t, index) => (
                 <div key={t.id} className="group relative">
                   <button
                     className={[
-                      "tab px-4 py-2 text-sm font-medium transition-all",
+                      "tab px-4 py-2 text-sm font-medium transition-all duration-300 rounded-t-lg",
                       activeId === t.id 
-                        ? "tab-active text-primary border-b-2 border-primary" 
-                        : "text-base-content/70 hover:text-base-content",
+                        ? "tab-active text-primary border-b-2 border-primary bg-primary/5 shadow-sm" 
+                        : "text-base-content/70 hover:text-base-content hover:bg-base-200/30",
                     ].join(" ")}
                     onClick={() => setActiveId(t.id)}
                   >
@@ -348,7 +363,7 @@ export function TestApiApp() {
                     <span className="truncate max-w-[150px]">{t.title}</span>
                   </button>
                   <button 
-                    className="absolute -right-2 -top-2 opacity-0 group-hover:opacity-100 btn btn-ghost btn-xs btn-circle transition-opacity" 
+                    className="absolute -right-2 -top-2 opacity-0 group-hover:opacity-100 btn btn-ghost btn-xs btn-circle transition-all duration-300 hover:scale-110 hover:bg-error/20 hover:text-error magnetic-btn" 
                     onClick={() => closeTab(t.id)} 
                     aria-label="Close tab"
                     title="Close"
@@ -367,8 +382,8 @@ export function TestApiApp() {
           </button>
         </div>
 
-        {/* Workspace */}
-        <div className="mt-4 flex-1 min-h-0 flex overflow-hidden border-4 border-base-300 rounded-lg bg-base-100">
+        {/* Enhanced Workspace */}
+        <div className="mt-4 flex-1 h-[calc(100vh-8rem)] flex overflow-hidden border-4 border-base-300/50 rounded-2xl bg-base-100/80 backdrop-blur-sm glass-card">
           <ResizableSidebar
             side="left"
             title="Request"
@@ -377,10 +392,10 @@ export function TestApiApp() {
             onCollapsedChange={setLeftCollapsed}
           >
             {!active ? null : (
-              <div className="p-4 space-y-4 border-r border-base-300 h-lvh overflow-auto">
+              <div className="p-4 space-y-4 border-r border-base-300 h-lvh overflow-auto scroll-container">
                 <div className="flex gap-2">
                   <select
-                    className="select select-bordered w-32"
+                    className="select select-bordered w-32 transition-all duration-300 hover:border-primary/50 focus:border-primary focus:ring-2 focus:ring-primary/20"
                     value={active.draft.method}
                     onChange={(e) => updateActiveDraft({ method: e.target.value as Tab["draft"]["method"] })}
                   >
@@ -391,7 +406,7 @@ export function TestApiApp() {
                     ))}
                   </select>
                   <input
-                    className="input input-bordered flex-1"
+                    className="input input-bordered flex-1 transition-all duration-300 hover:border-primary/50 focus:border-primary focus:ring-2 focus:ring-primary/20"
                     placeholder="https://api.example.com/v1/users"
                     value={active.draft.url}
                     onChange={(e) => updateActiveDraft({ url: e.target.value })}
@@ -400,14 +415,14 @@ export function TestApiApp() {
 
                 <div className="flex gap-2">
                   <button 
-                    className="btn btn-primary flex-1 gap-2" 
+                    className="btn btn-primary flex-1 gap-2 magnetic-btn pulse-ring transition-all duration-300" 
                     onClick={runActiveRequest}
                     disabled={isLoadingRequest}
                   >
                     {isLoadingRequest && <span className="loading loading-spinner loading-sm"></span>}
                     {isLoadingRequest ? "Sending..." : "Send"}
                   </button>
-                  <button className="btn btn-ghost border msp-border" onClick={() => active && saveTab(active)}>
+                  <button className="btn btn-ghost border msp-border hover:border-primary/30 hover:bg-primary/5 transition-all duration-300 magnetic-btn" onClick={() => active && saveTab(active)}>
                     Save
                   </button>
                 </div>
@@ -460,14 +475,14 @@ export function TestApiApp() {
 
                 <div className="divider my-0">Body (JSON)</div>
                 <textarea
-                  className="textarea textarea-bordered font-mono text-xs min-h-44"
+                  className="textarea textarea-bordered font-mono text-xs min-h-44 transition-all duration-300 hover:border-primary/50 focus:border-primary focus:ring-2 focus:ring-primary/20 code-block"
                   value={active.draft.body}
                   onChange={(e) => updateActiveDraft({ body: e.target.value })}
                   placeholder='{\n  "name": "Jane"\n}'
                 />
                 <div className="flex gap-2">
                   <button
-                    className="btn btn-ghost btn-sm border msp-border"
+                    className="btn btn-ghost btn-sm border msp-border hover:border-success/30 hover:bg-success/5 transition-all duration-300 magnetic-btn"
                     onClick={() => {
                       const out = tryFormatJson(active.draft.body);
                       if (!out.ok) {
@@ -481,7 +496,7 @@ export function TestApiApp() {
                     Format JSON
                   </button>
                   <button
-                    className="btn btn-ghost btn-sm border msp-border"
+                    className="btn btn-ghost btn-sm border msp-border hover:border-info/30 hover:bg-info/5 transition-all duration-300 magnetic-btn"
                     onClick={() => {
                       if (safeCopy(active.draft.body)) push("info", "Copied.");
                       else push("error", "Copy failed.");
@@ -515,12 +530,18 @@ export function TestApiApp() {
                   </div>
                 </div>
 
-                <div className={`grid gap-2 m-5 lg:grid-cols-2 items-stretch border-4 ${getResponseBorderColor(active.response)} rounded-xl h-full`}>
-                  <div className={`flex flex-col bg-base-100 p-6 sm:p-8 transition-colors duration-200`}>
+                <div className={`grid gap-2 m-5 lg:grid-cols-2 items-stretch border-4 rounded-2xl h-full transition-all duration-500 ${
+                  !active.response ? 'border-base-300' :
+                  active.response.error ? 'border-error glow-error' :
+                  active.response.status && active.response.status >= 200 && active.response.status < 300 ? 'border-success glow-success' :
+                  active.response.status && active.response.status >= 400 ? 'border-error glow-error' :
+                  'border-warning glow-warning'
+                }`}>
+                  <div className={`flex flex-col bg-base-100/60 backdrop-blur-sm p-6 sm:p-8 transition-all duration-300 rounded-2xl border border-base-300/30 glass-card animate-slide-up`}>
                     <div className="flex items-center justify-between gap-2 mb-4">
                       <h3 className="text-base font-semibold">Response</h3>
                       <button
-                        className="btn btn-ghost btn-sm"
+                        className="btn btn-ghost btn-sm hover:border-info/30 hover:bg-info/5 transition-all duration-300 magnetic-btn"
                         onClick={() => {
                           const text =
                             active.response?.json != null
@@ -543,53 +564,57 @@ export function TestApiApp() {
                     ) : (
                       <>
                         {active.response && (
-                          <div className="mb-4 p-4 rounded-lg border border-base-300 bg-base-200/30">
+                          <div className="mb-4 p-4 rounded-xl border border-base-300/50 bg-base-200/40 backdrop-blur-sm">
                             <div className="grid grid-cols-3 gap-4 text-sm">
-                              <div>
-                                <div className="text-xs text-base-content/60">Status</div>
-                                <div className={`font-bold text-lg ${
+                              <div className="text-center">
+                                <div className="text-xs text-base-content/60 mb-1">Status</div>
+                                <div className={`font-bold text-lg transition-all duration-300 ${
                                   active.response.status 
                                     ? active.response.status >= 200 && active.response.status < 300
-                                      ? "text-success"
+                                      ? "text-success badge-glow-success"
                                       : active.response.status >= 400
-                                      ? "text-error"
-                                      : "text-warning"
+                                      ? "text-error badge-glow-error"
+                                      : "text-warning badge-glow-warning"
                                     : "text-base-content"
                                 }`}>
                                   {active.response.status || "—"}
                                 </div>
                               </div>
-                              <div>
-                                <div className="text-xs text-base-content/60">Message</div>
-                                <div className="text-sm font-medium truncate">{active.response.statusText || "—"}</div>
+                              <div className="text-center">
+                                <div className="text-xs text-base-content/60 mb-1">Message</div>
+                                <div className="text-sm font-medium truncate transition-colors duration-300">{active.response.statusText || "—"}</div>
                               </div>
-                              <div>
-                                <div className="text-xs text-base-content/60">Time</div>
-                                <div className="text-sm font-medium">{active.response.timeMs ?? "—"}ms</div>
+                              <div className="text-center">
+                                <div className="text-xs text-base-content/60 mb-1">Time</div>
+                                <div className="text-sm font-medium transition-colors duration-300">{active.response.timeMs ?? "—"}ms</div>
                               </div>
                             </div>
                           </div>
                         )}
                         {active.response?.error && (
-                          <div className="alert alert-error mb-4">
-                            <svg className="h-6 w-6 flex-shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
+                          <div className="alert alert-error mb-4 glass-card">
+                            <svg className="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                             <span>{active.response.error}</span>
                           </div>
                         )}
-                        <pre className="flex-1 rounded-lg bg-base-200/50 p-4 text-xs overflow-auto border border-base-300">
-                          {active.response
-                            ? active.response.json
-                              ? prettyJson(active.response.json)
-                              : active.response.bodyText || "(Empty response)"
-                            : "Send a request to see results."}
+                        <pre className="flex-1 rounded-xl bg-base-200/60 backdrop-blur-sm p-4 text-xs overflow-auto border border-base-300/50 code-block transition-all duration-300 hover:border-primary/30 scroll-container">
+                          {active.response ? (
+                            active.response.json ? (
+                              prettyJson(active.response.json)
+                            ) : (
+                              active.response.bodyText || "(Empty response)"
+                            )
+                          ) : (
+                            "Send a request to see results."
+                          )}
                         </pre>
                       </>
                     )}
                   </div>
 
-                  <div className={`flex flex-col bg-base-100 p-6 sm:p-8 transition-colors duration-200`}>
+                  <div className={`flex flex-col bg-base-100/60 backdrop-blur-sm p-6 sm:p-8 transition-all duration-300 rounded-2xl border border-base-300/30 glass-card animate-slide-up`}>
                     <h3 className="text-base font-semibold mb-4">AI Explanation</h3>
                     {isLoadingRequest ? (
                       <div className="space-y-3">
@@ -598,11 +623,14 @@ export function TestApiApp() {
                         <div className="skeleton h-6 w-4/5"></div>
                       </div>
                     ) : (
-                      <div className="flex-1 text-sm leading-7 text-base-content/80 whitespace-pre-wrap overflow-auto">
-                        {active.aiExplain
-                          ? active.aiExplain
-                          : "Send a request to get AI-powered insights about the response, including potential issues and next steps."}
-                      </div>
+                      <div 
+                        className="flex-1 text-sm leading-7 text-base-content/80 overflow-auto scroll-container"
+                        dangerouslySetInnerHTML={{
+                          __html: active.aiExplain
+                            ? formatAIExplanation(active.aiExplain)
+                            : "Send a request to get AI-powered insights about the response, including potential issues and next steps."
+                        }}
+                      />
                     )}
                     {/* {!isLoadingRequest && (
                       <div className="mt-4 text-xs text-base-content/60 bg-base-200/30 rounded-lg p-3">
@@ -622,22 +650,22 @@ export function TestApiApp() {
             collapsed={rightCollapsed}
             onCollapsedChange={setRightCollapsed}
           >
-            <div className="p-3 space-y-4 border-r border-base-300 h-auto overflow-auto">
-              <div className="tabs tabs-bordered">
+            <div className="p-3 space-y-4 border-r border-base-300/50 h-auto overflow-auto backdrop-blur-sm">
+              <div className="tabs tabs-bordered glass-card rounded-xl p-1">
                 <button
-                  className={["tab", rightTab === "saved" ? "tab-active" : ""].join(" ")}
+                  className={["tab transition-all duration-300 rounded-lg", rightTab === "saved" ? "tab-active bg-primary/10 text-primary" : "hover:bg-base-200/30"].join(" ")}
                   onClick={() => setRightTab("saved")}
                 >
                   Saved
                 </button>
                 <button
-                  className={["tab", rightTab === "history" ? "tab-active" : ""].join(" ")}
+                  className={["tab transition-all duration-300 rounded-lg", rightTab === "history" ? "tab-active bg-primary/10 text-primary" : "hover:bg-base-200/30"].join(" ")}
                   onClick={() => setRightTab("history")}
                 >
                   History
                 </button>
                 <button
-                  className={["tab", rightTab === "chat" ? "tab-active" : ""].join(" ")}
+                  className={["tab transition-all duration-300 rounded-lg", rightTab === "chat" ? "tab-active bg-primary/10 text-primary" : "hover:bg-base-200/30"].join(" ")}
                   onClick={() => setRightTab("chat")}
                 >
                   AI Chat
@@ -647,27 +675,28 @@ export function TestApiApp() {
 
             {rightTab === "saved" ? (
               <div className="px-3 pb-4">
-                <div className="text-xs text-base-content/60">
+                <div className="text-xs text-base-content/60 mb-3 animate-fade-in">
                   Saved requests are stored locally (limit {SAVED_LIMIT}).
                 </div>
                 <div className="mt-3 space-y-2">
                   {saved.length === 0 ? (
-                    <div className="text-sm text-base-content/70">No saved requests yet.</div>
+                    <div className="text-sm text-base-content/70 text-center py-8 animate-fade-in">No saved requests yet.</div>
                   ) : (
-                    saved.map((s) => (
+                    saved.map((s, index) => (
                       <div
                         key={s.id}
-                        className="w-full rounded-xl border msp-border bg-base-100 p-3 hover:bg-base-200/40 transition-colors"
+                        className="w-full rounded-xl border msp-border bg-base-100/60 backdrop-blur-sm p-3 hover:bg-base-200/50 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg animate-slide-up group"
+                        style={{ animationDelay: `${index * 0.05}s` }}
                       >
                         <div className="flex items-start justify-between gap-2">
                           <button className="text-left min-w-0 flex-1" onClick={() => loadSavedIntoTab(s)}>
-                            <div className="text-sm font-medium truncate">{s.title}</div>
-                            <div className="mt-1 text-xs text-base-content/60 truncate">
+                            <div className="text-sm font-medium truncate transition-colors duration-300 group-hover:text-primary">{s.title}</div>
+                            <div className="mt-1 text-xs text-base-content/60 truncate transition-colors duration-300 group-hover:text-base-content/80">
                               {s.draft.method} • {s.draft.url}
                             </div>
                           </button>
                           <button
-                            className="btn btn-ghost btn-xs"
+                            className="btn btn-ghost btn-xs opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-error/20 hover:text-error hover:scale-110"
                             onClick={() => deleteSaved(s.id)}
                             aria-label="Delete saved request"
                             title="Delete"
@@ -682,21 +711,22 @@ export function TestApiApp() {
               </div>
             ) : rightTab === "history" ? (
               <div className="px-3 pb-4">
-                <div className="text-xs text-base-content/60">
+                <div className="text-xs text-base-content/60 mb-3 animate-fade-in">
                   Last runs (limit {HISTORY_LIMIT}). Stored locally.
                 </div>
                 <div className="mt-3 space-y-2">
                   {history.length === 0 ? (
-                    <div className="text-sm text-base-content/70">No history yet. Send a request.</div>
+                    <div className="text-sm text-base-content/70 text-center py-8 animate-fade-in">No history yet. Send a request.</div>
                   ) : (
                     history.map((h, idx) => (
                       <div
                         key={`${h.savedAt}-${idx}`}
-                        className="w-full rounded-xl border msp-border bg-base-100 p-3 hover:bg-base-200/40 transition-colors"
+                        className="w-full rounded-xl border msp-border bg-base-100/60 backdrop-blur-sm p-3 hover:bg-base-200/50 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg animate-slide-up group"
+                        style={{ animationDelay: `${idx * 0.05}s` }}
                       >
                         <button className="text-left w-full" onClick={() => loadSavedIntoTab(h)}>
-                          <div className="text-sm font-medium truncate">{h.title}</div>
-                          <div className="mt-1 text-xs text-base-content/60 truncate">
+                          <div className="text-sm font-medium truncate transition-colors duration-300 group-hover:text-primary">{h.title}</div>
+                          <div className="mt-1 text-xs text-base-content/60 truncate transition-colors duration-300 group-hover:text-base-content/80">
                             {h.draft.method} • {h.draft.url}
                           </div>
                         </button>
@@ -706,12 +736,12 @@ export function TestApiApp() {
                 </div>
               </div>
             ) : (
-              <div className="px-3 pb-4 h-[calc(100%-92px)] flex flex-col bg-gradient-to-b from-base-100/50 to-base-100">
-                <div className="flex-1 overflow-auto space-y-3 pr-1 py-4">
+              <div className="px-3 pb-4 h-full flex flex-col bg-linear-to-b from-base-100/50 to-base-100 backdrop-blur-sm">
+                <div className="flex-1 overflow-auto space-y-3 pr-1 py-4 scroll-container">
                   {chat.length === 0 ? (
                     <div className="h-full flex items-center justify-center">
                       <div className="text-center text-base-content/60">
-                        <div className="text-4xl mb-2">💬</div>
+                        <div className="text-4xl mb-2">emoji</div>
                         <p className="text-sm">Start a conversation</p>
                       </div>
                     </div>
@@ -720,10 +750,10 @@ export function TestApiApp() {
                       <div
                         key={i}
                         className={[
-                          "rounded-2xl px-4 py-3 text-sm leading-6 break-words",
+                          "rounded-2xl px-4 py-3 text-sm leading-6 wrap-break-word glass-card",
                           m.role === "user"
                             ? "ml-auto bg-primary text-primary-content max-w-[85%] shadow-sm"
-                            : "mr-auto bg-base-200/70 text-base-content max-w-[85%]",
+                            : "mr-auto bg-base-200/70 text-base-content max-w-[85%] backdrop-blur-sm",
                         ].join(" ")}
                       >
                         {m.content}
@@ -731,9 +761,9 @@ export function TestApiApp() {
                     ))
                   )}
                 </div>
-                <div className="mt-3 flex gap-2 pt-3 border-t border-base-300">
+                <div className="mt-3 flex gap-2 pt-3 border-t border-base-300/50 backdrop-blur-sm">
                   <input
-                    className="input input-bordered flex-1 input-sm"
+                    className="input input-bordered flex-1 input-sm transition-all duration-300 hover:border-primary/50 focus:border-primary focus:ring-2 focus:ring-primary/20"
                     placeholder='Try: "Send GET request to https://api.github.com"'
                     value={chatInput}
                     onChange={(e) => setChatInput(e.target.value)}
@@ -746,7 +776,7 @@ export function TestApiApp() {
                     disabled={isLoadingRequest}
                   />
                   <button 
-                    className="btn btn-primary btn-sm" 
+                    className="btn btn-primary btn-sm transition-all duration-300" 
                     onClick={handleChatSend}
                     disabled={isLoadingRequest || !chatInput.trim()}
                   >
@@ -759,22 +789,22 @@ export function TestApiApp() {
         </div>
       </div>
 
-      {/* Toasts */}
+      {/* Enhanced Toasts */}
       <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none">
         {toasts.map((t) => (
           <div 
             key={t.id} 
             className={[
-              "alert rounded-xl shadow-lg pointer-events-auto max-w-sm gap-3",
-              t.kind === "error" ? "alert-error" : "alert-success"
+              "alert rounded-2xl shadow-xl pointer-events-auto max-w-sm gap-3 glass-card",
+              t.kind === "error" ? "alert-error glow-error" : "alert-success glow-success"
             ].join(" ")}
           >
             {t.kind === "error" ? (
-              <svg className="h-6 w-6 flex-shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
+              <svg className="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             ) : (
-              <svg className="h-6 w-6 flex-shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
+              <svg className="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             )}
