@@ -383,7 +383,7 @@ export function TestApiApp() {
         </div>
 
         {/* Enhanced Workspace */}
-        <div className="mt-4 flex-1 h-[calc(100vh-8rem)] flex overflow-hidden border-4 border-base-300/50 rounded-2xl bg-base-100/80 backdrop-blur-sm glass-card">
+        <div className="mt-4 flex-1 min-h-0 flex overflow-hidden border-4 border-base-300/50 rounded-2xl bg-base-100/80 backdrop-blur-sm glass-card">
           <ResizableSidebar
             side="left"
             title="Request"
@@ -392,7 +392,7 @@ export function TestApiApp() {
             onCollapsedChange={setLeftCollapsed}
           >
             {!active ? null : (
-              <div className="p-4 space-y-4 border-r border-base-300 h-lvh overflow-auto scroll-container">
+              <div className="p-4 space-y-4 border-r border-base-300 h-full overflow-auto scroll-container">
                 <div className="flex gap-2">
                   <select
                     className="select select-bordered w-32 transition-all duration-300 hover:border-primary/50 focus:border-primary focus:ring-2 focus:ring-primary/20"

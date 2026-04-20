@@ -79,40 +79,22 @@ const STEPS = [
 export default function Home() {
   return (
     <main className="flex-1 relative overflow-hidden">
-      {/* Enhanced Background Effects */}
-      <div className="fixed inset-0 dot-grid pointer-events-none" aria-hidden="true" />
-      <div className="aurora-bg" aria-hidden="true" />
-      <div className="particle-bg" aria-hidden="true">
-        {[...Array(8)].map((_, i) => (
-          <div
-            key={i}
-            className="particle"
-            style={{
-              left: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 8}s`,
-              animationDuration: `${8 + Math.random() * 4}s`
-            }}
-          />
-        ))}
-      </div>
-      <div className="floating-orb floating-orb-1" aria-hidden="true" />
-      <div className="floating-orb floating-orb-2" aria-hidden="true" />
-      <div className="floating-orb floating-orb-3" aria-hidden="true" />
+      {/* Background Effects - REMOVED FOR PERFORMANCE */}
 
       <div className="relative z-10 mx-auto max-w-[1200px] px-4 py-12 sm:py-20">
         <div className="grid gap-10 lg:grid-cols-[1.2fr_0.8fr] items-start">
 
-          {/* ── Hero Section ── */}
-          <section className="animate-slide-up">
+          {/* Hero Section */}
+          <section>
             <div className="glass-card rounded-3xl p-8 sm:p-12">
-              {/* Enhanced Badge */}
-              <div className="inline-flex items-center gap-2.5 rounded-full bg-primary/10 border border-primary/20 px-4 py-2 text-xs sm:text-sm font-medium text-primary mb-8 animate-fade-in magnetic-btn">
-                <span className="relative inline-block w-2 h-2 bg-primary rounded-full enhanced-status-dot" />
+              {/* Badge */}
+              <div className="inline-flex items-center gap-2.5 rounded-full bg-primary/10 border border-primary/20 px-4 py-2 text-xs sm:text-sm font-medium text-primary mb-8">
+                <span className="relative inline-block w-2 h-2 bg-primary rounded-full" />
                 Beginner-friendly · Fast · AI-guided
               </div>
 
               {/* Enhanced Heading */}
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.1] text-base-content mb-6 text-reveal">
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.1] text-base-content mb-6">
                 Test APIs{" "}
                 <span className="gradient-text">without the complexity</span>
               </h1>
@@ -122,23 +104,17 @@ export default function Home() {
                 TraceAPI is a minimal, modern API tester designed for beginners
                 and developers. Build, send, and{" "}
                 <span className="font-semibold text-base-content/80">
-                  understand
-                </span>{" "}
-                every response with AI.
+                  test APIs effortlessly
+                </span>
               </p>
 
               {/* Enhanced CTAs */}
-              <div className="flex flex-col sm:flex-row gap-4 mb-14">
+              <div className="flex gap-4">
                 <Link
                   href="/test-api"
-                  className="btn btn-primary btn-lg rounded-full font-bold px-8 gap-2 glow-primary-sm hover:glow-primary transition-all duration-300 magnetic-btn pulse-ring"
+                  className="btn btn-primary btn-lg rounded-full font-semibold"
                 >
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -150,7 +126,7 @@ export default function Home() {
                 </Link>
                 <a
                   href="#features"
-                  className="btn btn-ghost btn-lg rounded-full font-semibold border border-base-300/50 hover:border-primary/30 hover:bg-primary/5 transition-all duration-300 magnetic-btn smooth-scroll"
+                  className="btn btn-ghost btn-lg rounded-full font-semibold"
                 >
                   Learn More
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -159,29 +135,21 @@ export default function Home() {
                 </a>
               </div>
 
-              {/* Enhanced Features Grid */}
-              <div
-                id="features"
-                className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 stagger-children parallax-slow"
-              >
-                {FEATURES.map((f, index) => (
+              {/* Features Grid - SIMPLIFIED */}
+              <div className="grid gap-6 lg:gap-8">
+                {FEATURES.map((feature) => (
                   <div
-                    key={f.title}
-                    className="feature-card animate-slide-up group"
-                    style={{ animationDelay: `${index * 0.1}s` }}
+                    key={feature.title}
+                    className="feature-card"
                   >
-                    <div className="flex items-center gap-3 mb-3 relative z-10">
-                      <div
-                        className={`flex items-center justify-center w-10 h-10 rounded-xl ${f.bg} ${f.color} transition-all duration-300 group-hover:scale-110 group-hover:rotate-6`}
-                      >
-                        {f.icon}
+                    <div className="flex items-start gap-4">
+                      <div className="p-3 rounded-xl bg-primary/10 text-primary">
+                        {feature.icon}
                       </div>
-                      <div className="text-sm font-bold text-base-content transition-colors duration-300 group-hover:text-primary">
-                        {f.title}
+                      <div className="flex-1">
+                        <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
+                        <p className="text-base-content/70 leading-relaxed">{feature.desc}</p>
                       </div>
-                    </div>
-                    <div className="text-sm text-base-content/60 leading-relaxed transition-colors duration-300 group-hover:text-base-content/80">
-                      {f.desc}
                     </div>
                   </div>
                 ))}
@@ -190,32 +158,26 @@ export default function Home() {
           </section>
 
           {/* ── Enhanced Sidebar ── */}
-          <aside className="animate-slide-left parallax-medium" style={{ animationDelay: "0.15s" }}>
-            <div className="glass-card rounded-3xl p-8 sm:p-10 sticky top-20 gradient-border">
-              <h2 className="text-xl font-bold tracking-tight text-base-content mb-8 flex items-center gap-2 text-reveal">
-                <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary magnetic-btn">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
-                  </svg>
-                </span>
+          <aside>
+            <div className="rounded-3xl p-8 sm:p-10 sticky top-20">
+              <h2 className="text-xl font-bold tracking-tight text-base-content mb-8 flex items-center gap-2">
                 How It Works
               </h2>
 
-              <ol className="space-y-6 stagger-children">
+              <ol className="space-y-6">
                 {STEPS.map((item, index) => (
                   <li
                     key={item.step}
-                    className="flex gap-4 animate-slide-up group"
-                    style={{ animationDelay: `${0.2 + index * 0.1}s` }}
+                    className="flex gap-4"
                   >
-                    <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary text-primary-content font-bold text-sm flex-shrink-0 group-hover:glow-primary-sm transition-all duration-300 group-hover:scale-110 group-hover:rotate-12 magnetic-btn">
+                    <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary text-primary-content font-bold text-sm flex-shrink-0">
                       {item.step}
                     </div>
                     <div className="flex-1 pt-1">
-                      <div className="font-semibold text-base-content group-hover:text-primary transition-colors duration-300">
+                      <div className="font-semibold text-base-content">
                         {item.title}
                       </div>
-                      <div className="text-sm text-base-content/60 mt-1 group-hover:text-base-content/80 transition-colors duration-300">
+                      <div className="text-sm text-base-content/60 mt-1">
                         {item.desc}
                       </div>
                     </div>
@@ -224,9 +186,9 @@ export default function Home() {
               </ol>
 
               {/* Enhanced Pro Tip */}
-              <div className="mt-10 rounded-2xl border border-success/20 bg-success/5 p-5 backdrop-blur-sm magnetic-btn hover:border-success/40 hover:bg-success/10 transition-all duration-300">
+              <div className="mt-10 rounded-2xl border border-success/20 bg-success/5 p-5 backdrop-blur-sm">
                 <div className="flex items-start gap-3">
-                  <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-success/15 text-success flex-shrink-0 animate-scale-in">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-success/15 text-success flex-shrink-0">
                     <svg
                       className="w-4 h-4"
                       fill="none"

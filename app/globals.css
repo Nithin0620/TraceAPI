@@ -40,21 +40,10 @@ pre,
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
 }
 
-/* ── Theme transitions ── */
+/* ── Theme transitions - REMOVED FOR PERFORMANCE ── */
 html,
 body {
-  transition: background-color 300ms ease, color 300ms ease;
-}
-
-/* Remove global transitions that cause scroll issues */
-.scroll-container * {
-  transition: none !important;
-}
-
-.scroll-container {
-  transform: translateZ(0);
-  backface-visibility: hidden;
-  perspective: 1000px;
+  /* transitions removed */
 }
 
 /* ── Scrollbar ── */
@@ -91,22 +80,11 @@ body {
   scroll-behavior: smooth;
 }
 
-/* ── Optimize scrolling performance ── */
+/* ── Scroll Container - SIMPLIFIED ── */
 .scroll-container {
   scroll-behavior: auto;
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
-  transform: translateZ(0);
-  backface-visibility: hidden;
-  perspective: 1000px;
-  contain: layout style paint;
-}
-
-/* Force hardware acceleration */
-.gpu-accelerated {
-  transform: translateZ(0);
-  backface-visibility: hidden;
-  perspective: 1000px;
+  /* hardware acceleration removed */
 }
 
 /* ── Glass Surface ── */
@@ -120,65 +98,42 @@ body {
   @apply border-base-300/50;
 }
 
-/* ── Glassmorphism Card (simplified) ── */
+/* ── Glass Card - SIMPLIFIED FOR PERFORMANCE ── */
 .glass-card {
   background: oklch(var(--b1) / 0.4);
-  backdrop-filter: blur(16px) saturate(1.5);
-  -webkit-backdrop-filter: blur(16px) saturate(1.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border: 1px solid oklch(var(--bc) / 0.06);
-  box-shadow: 0 4px 16px oklch(var(--bc) / 0.08);
+  /* box-shadow removed */
   position: relative;
   overflow: hidden;
 }
 
 .glass-card:hover {
-  background: oklch(var(--b1) / 0.5);
-  border-color: oklch(var(--p) / 0.2);
-  /* transform removed for scroll performance */
+  /* hover effects removed */
 }
 
-/* ── Animated Gradient Text ── */
+/* ── Gradient Text - ANIMATION REMOVED ── */
 .gradient-text {
   background: linear-gradient(135deg,
       oklch(var(--p)) 0%,
       oklch(var(--s)) 50%,
       oklch(var(--a)) 100%);
-  background-size: 200% 200%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  animation: gradient-shift 4s ease infinite;
-  filter: drop-shadow(0 0 10px oklch(var(--p) / 0.2));
 }
 
-@keyframes gradient-shift {
-  0%, 100% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-}
-
-/* ── Glow Effects ── */
-.glow-primary {
-  box-shadow: 0 0 20px oklch(var(--p) / 0.3), 0 0 60px oklch(var(--p) / 0.1);
-}
-
-.glow-primary-sm {
-  box-shadow: 0 0 12px oklch(var(--p) / 0.2), 0 0 30px oklch(var(--p) / 0.06);
-}
-
-.glow-success {
-  box-shadow: 0 0 20px oklch(var(--su) / 0.3);
-}
-
-.glow-error {
-  box-shadow: 0 0 20px oklch(var(--er) / 0.3);
-}
-
-.glow-warning {
-  box-shadow: 0 0 20px oklch(var(--wa) / 0.3);
+/* ── Glow Effects - REMOVED FOR PERFORMANCE ── */
+.glow-primary,
+.glow-primary-sm,
+.glow-success,
+.glow-success-sm,
+.glow-warning,
+.glow-warning-sm,
+.glow-error,
+.glow-error-sm {
+  /* all glow effects removed */
 }
 
 /* ── Animated Dot Grid Background ── */
@@ -187,13 +142,12 @@ body {
   background-size: 28px 28px;
 }
 
-/* ── Floating Orbs ── */
+/* ── Floating Orbs - ANIMATION REMOVED ── */
 .floating-orb {
   position: absolute;
   border-radius: 50%;
   filter: blur(80px);
   opacity: 0.3;
-  animation: float-drift 15s ease-in-out infinite;
   pointer-events: none;
   mix-blend-mode: screen;
 }
@@ -204,7 +158,6 @@ body {
   background: oklch(var(--p) / 0.5);
   top: -100px;
   right: -100px;
-  animation-delay: 0s;
 }
 
 .floating-orb-2 {
@@ -213,7 +166,6 @@ body {
   background: oklch(var(--s) / 0.4);
   bottom: -80px;
   left: -80px;
-  animation-delay: -6s;
 }
 
 .floating-orb-3 {
@@ -222,166 +174,36 @@ body {
   background: oklch(var(--a) / 0.3);
   top: 50%;
   left: 50%;
-  animation-delay: -12s;
 }
 
-@keyframes float-drift {
-  0%, 100% {
-    transform: translate(0, 0) scale(1);
-  }
-  50% {
-    transform: translate(20px, -30px) scale(1.05);
-  }
-}
-
-/* ── Pulse Ring ── */
+/* ── Pulse Ring - REMOVED FOR PERFORMANCE ── */
 .pulse-ring {
   position: relative;
 }
 
-.pulse-ring::before {
-  content: '';
-  position: absolute;
-  inset: -3px;
-  border-radius: inherit;
-  background: linear-gradient(135deg, oklch(var(--p)), oklch(var(--s)));
-  opacity: 0;
-  z-index: -1;
-  animation: pulse-ring-animation 2s ease-in-out infinite;
-}
-
-@keyframes pulse-ring-animation {
-
-  0%,
-  100% {
-    opacity: 0;
-    transform: scale(1);
-  }
-
-  50% {
-    opacity: 0.3;
-    transform: scale(1.02);
-  }
-}
-
-/* ── Slide-in animations (disabled for scroll performance) ── */
-.animate-slide-up {
-  /* animation disabled for scroll performance */
-}
-
-.animate-slide-down {
-  /* animation disabled for scroll performance */
-}
-
-.animate-slide-left {
-  /* animation disabled for scroll performance */
-}
-
-.animate-slide-right {
-  /* animation disabled for scroll performance */
-}
-
-.animate-fade-in {
-  /* animation disabled for scroll performance */
-}
-
-.animate-scale-in {
-  /* animation disabled for scroll performance */
-}
-
-@keyframes slide-up {
-  from {
-    opacity: 0;
-    transform: translateY(24px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes slide-down {
-  from {
-    opacity: 0;
-    transform: translateY(-16px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes slide-left {
-  from {
-    opacity: 0;
-    transform: translateX(24px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes slide-right {
-  from {
-    opacity: 0;
-    transform: translateX(-24px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes fade-in {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes scale-in {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-/* Staggered children */
+/* ── Staggered children */
 .stagger-children>*:nth-child(1) {
-  animation-delay: 0.05s;
+  animation-delay: 0s;
 }
 
 .stagger-children>*:nth-child(2) {
-  animation-delay: 0.1s;
+  animation-delay: 0s;
 }
 
 .stagger-children>*:nth-child(3) {
-  animation-delay: 0.15s;
+  animation-delay: 0s;
 }
 
 .stagger-children>*:nth-child(4) {
-  animation-delay: 0.2s;
+  animation-delay: 0s;
 }
 
 .stagger-children>*:nth-child(5) {
-  animation-delay: 0.25s;
+  animation-delay: 0s;
 }
 
 .stagger-children>*:nth-child(6) {
-  animation-delay: 0.3s;
+  animation-delay: 0s;
 }
 
 /* ── Status indicator pulse ── */
@@ -396,59 +218,12 @@ body {
   border-radius: 50%;
   background: inherit;
   opacity: 0.5;
-  animation: status-pulse 2s ease-in-out infinite;
+  /* animation removed */
 }
 
-@keyframes status-pulse {
+/* ---- Shimmer loading - REMOVED FOR PERFORMANCE ---- */
 
-  0%,
-  100% {
-    transform: scale(1);
-    opacity: 0.5;
-  }
-
-  50% {
-    transform: scale(1.8);
-    opacity: 0;
-  }
-}
-
-/* ── Shimmer loading ── */
-.shimmer {
-  background: linear-gradient(90deg,
-      oklch(var(--b2) / 0.5) 0%,
-      oklch(var(--b3) / 0.8) 50%,
-      oklch(var(--b2) / 0.5) 100%);
-  background-size: 200% 100%;
-  animation: shimmer-move 1.5s ease-in-out infinite;
-}
-
-@keyframes shimmer-move {
-  0% {
-    background-position: 200% 0;
-  }
-
-  100% {
-    background-position: -200% 0;
-  }
-}
-
-/* ── Toast Slide In ── */
-.toast-enter {
-  animation: toast-slide-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-@keyframes toast-slide-in {
-  from {
-    opacity: 0;
-    transform: translateX(100%) scale(0.8);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateX(0) scale(1);
-  }
-}
+/* ---- Toast Slide In - REMOVED FOR PERFORMANCE ---- */
 
 /* ── Gradient Border ── */
 .gradient-border {
@@ -512,19 +287,14 @@ body {
   box-shadow: 0 2px 20px oklch(var(--bc) / 0.04);
 }
 
-/* ── Feature Card Hover (simplified for performance) ── */
+/* ── Feature Card - ALL EFFECTS REMOVED ── */
 .feature-card {
   @apply rounded-2xl border border-base-300/40 p-6;
   background: oklch(var(--b1) / 0.4);
-  backdrop-filter: blur(12px);
-  transition: background 0.2s ease;
+  backdrop-filter: blur(8px);
+  /* all transitions and hover effects removed */
   position: relative;
   overflow: hidden;
-}
-
-.feature-card:hover {
-  background: oklch(var(--b1) / 0.6);
-  border-color: oklch(var(--p) / 0.3);
 }
 
 /* ── Tab Indicator ── */
@@ -585,64 +355,27 @@ body {
   box-shadow: 0 0 8px oklch(var(--in) / 0.4);
 }
 
-.badge-glow-success {
-  box-shadow: 0 0 8px oklch(var(--su) / 0.4);
-}
-
-.badge-glow-warning {
-  box-shadow: 0 0 8px oklch(var(--wa) / 0.4);
-}
-
+/* ── Badge Glow Effects - REMOVED ── */
+.badge-glow-success,
+.badge-glow-warning,
 .badge-glow-error {
-  box-shadow: 0 0 8px oklch(var(--er) / 0.4);
+  /* badge glow effects removed */
 }
 
-/* ── Premium Loading Animations ── */
-.loading-dots::after {
-  animation-duration: 0.8s;
-}
+/* ── Loading Animations - REMOVED ── */
 
-/* ── Magnetic Button Effect (simplified) ── */
+/* ── Magnetic Button - ALL EFFECTS REMOVED ── */
 .magnetic-btn {
-  transition: background 0.2s ease, border-color 0.2s ease;
+  /* all transitions and effects removed */
 }
 
-.magnetic-btn:hover {
-  /* transform removed for scroll performance */
-}
-
-/* ── Particle Background ── */
+/* ── Particle Background - REMOVED FOR PERFORMANCE ── */
 .particle-bg {
   position: absolute;
   inset: 0;
   overflow: hidden;
   pointer-events: none;
-}
-
-.particle {
-  position: absolute;
-  width: 2px;
-  height: 2px;
-  background: oklch(var(--p) / 0.4);
-  border-radius: 50%;
-  animation: particle-float 8s linear infinite;
-}
-
-@keyframes particle-float {
-  0% {
-    transform: translateY(100vh);
-    opacity: 0;
-  }
-  10% {
-    opacity: 0.5;
-  }
-  90% {
-    opacity: 0.5;
-  }
-  100% {
-    transform: translateY(-100vh);
-    opacity: 0;
-  }
+  /* particles removed */
 }
 
 /* ── Aurora Background Effect ── */
